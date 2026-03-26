@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h1>{{ service.title }}</h1>
+                <p class="text-muted">Category: {{ service.category.name }}</p>
+                <hr>
+                <p>{{ service.description }}</p>
+                <h4 class="text-primary">${{ service.price }}</h4>
+                <p><strong>Delivery time:</strong> {{ service.delivery_time }} days</p>
+                <p><strong>Requirements:</strong> {{ service.requirements }}</p>
+            </div>
+        </div>
+
+        {% if service.images %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5>Images</h5>
+                <div class="row">
+                    {% for img in service.images %}
+                        <div class="col-md-4 mb-3">
+                            <img src="{{ url_for('uploaded_file', filename=img.image_url) }}" class="img-fluid rounded" alt="Service image">
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Reviews Section -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5>Reviews</h5>
+                {% set reviews = service.order_items|map(attribute='review')|reject('none')|list %}
+                {% if reviews %}
+                    {% for review in reviews %}
+                        <div class="border-bottom pb-3 mb-3">
+                            <strong>{{ review.buyer.full_name or review.buyer.username }}</strong>
+                            <span class="text-warning">★ {{ review.rating }}/5</span>
+                            <p class="mt-2">{{ review.comment }}</p>
+                            <small class="text-muted">{{ review.created_at.strftime('%Y-%m-%d') }}</small>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No reviews yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Seller Info</h5>
+                <p><strong>{{ service.seller.full_name or service.seller.username }}</strong></p>
+                {% if service.seller.avatar_url %}
+                    <img src="{{ service.seller.avatar_url }}" alt="Avatar" class="img-fluid rounded-circle mb-3" style="max-width: 100px;">
+                {% endif %}
+                <p>{{ service.seller.bio or 'No bio provided.' }}</p>
+                <form action="{{ url_for('messaging.start_conversation_with_seller', seller_id=service.seller_id) }}" method="POST">
+                    <button type="submit" class="btn btn-success w-100 mb-2">Contact Seller</button>
+                </form>
+                <form action="{{ url_for('cart.add_to_cart', service_id=service.id) }}" method="POST">
+                    <button type="submit" class="btn btn-primary w-100"><i class="fas fa-shopping-cart"></i></button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

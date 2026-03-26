@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketplace</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}"><i class="fas fa-store me-2"></i>Marketplace</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <!-- Marketplace link -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('marketplace.index') }}" data-bs-toggle="tooltip" title="Marketplace">
+                            <i class="fas fa-store"></i>
+                        </a>
+                    </li>
+
+                    {% if current_user.is_authenticated %}
+                        <!-- Dashboard link -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.home') }}" data-bs-toggle="tooltip" title="Dashboard">
+                                <i class="fas fa-columns"></i>
+                            </a>
+                        </li>
+
+                        <!-- Notifications dropdown -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span data-bs-toggle="tooltip" title="Notifications">
+                                    <i class="fas fa-bell"></i>
+                                </span>
+                                {% set unread_count = current_user.notifications|selectattr('is_read', 'equalto', false)|list|length %}
+                                {% if unread_count > 0 %}
+                                    <span class="badge bg-danger">{{ unread_count }}</span>
+                                {% endif %}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown">
+                                {% for notif in current_user.notifications|sort(attribute='created_at', reverse=true)|batch(5)|first %}
+                                    <li><a class="dropdown-item" href="{{ url_for('notifications.mark_read', notif_id=notif.id) }}">{{ notif.title }} - {{ notif.content[:30] }}...</a></li>
+                                {% else %}
+                                    <li><span class="dropdown-item">No notifications</span></li>
+                                {% endfor %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('notifications.view_all') }}">View All</a></li>
+                            </ul>
+                        </li>
+
+                        <!-- Profile link -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.profile') }}" data-bs-toggle="tooltip" title="Profile">
+                                <i class="fas fa-user"></i>
+                            </a>
+                        </li>
+
+                        <!-- Messages link -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('messaging.inbox') }}" data-bs-toggle="tooltip" title="Messages">
+                                <i class="fas fa-comments"></i>
+                            </a>
+                        </li>
+
+                        <!-- Logout (text link, no icon/tooltip) -->
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a></li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.login') }}">Login</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.register') }}">Register</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+    
+    <footer class="footer">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2026 Marketplace. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Initialize Bootstrap tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    </script>
+</body>
+</html>

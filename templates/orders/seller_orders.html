@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Orders Received</h1>
+{% if orders %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Order #</th>
+                <th>Buyer</th>
+                <th>Service</th>
+                <th>Price</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+                {% for item in order.items %}
+                    {% if item.seller_id == current_user.id %}
+                    <tr>
+                        <td>{{ order.order_number }}</td>
+                        <td>{{ order.buyer.full_name or order.buyer.username }}</td>
+                        <td>{{ item.service.title }}</td>
+                        <td>${{ item.unit_price }}</td>
+                        <td>{{ order.status }}</td>
+                        <td>
+                            <a href="{{ url_for('messaging.start_conversation', order_id=order.id) }}" class="btn btn-sm btn-info">Message Buyer</a>
+                        </td>
+                        <td>
+                            {% if order.status == 'pending' %}
+                                <form action="{{ url_for('orders.complete_order', order_id=order.id) }}" method="POST" style="display:inline;">
+                                    <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Mark this order as completed?')">Complete</button>
+                                </form>
+                            {% endif %}
+                            <a href="{{ url_for('orders.order_detail', order_id=order.id) }}" class="btn btn-sm btn-info">View</a>
+                        </td>
+                    </tr>
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>No orders received yet.</p>
+{% endif %}
+{% endblock %}

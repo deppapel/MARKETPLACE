@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="jumbotron">
+    <h1 class="display-4">Welcome, {{ user.full_name or user.username }}!</h1>
+    <p class="lead">You are logged in as a <strong>{{ user.role }}</strong>.</p>
+    <hr class="my-4">
+    <p>Use the navigation to explore your dashboard.</p>
+    {% if user.is_seller %}
+        <a class="btn btn-primary btn-lg" href="#" role="button">Manage Services</a>
+    {% endif %}
+    {% if user.is_buyer %}
+        <a class="btn btn-success btn-lg" href="#" role="button">Browse Marketplace</a>
+    {% endif %}
+</div>
+{% endblock %}

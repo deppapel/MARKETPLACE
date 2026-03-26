@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Messages</h1>
+
+{% if conversations %}
+    <div class="list-group">
+        {% for conv in conversations %}
+            {% set other_participants = conv.participants|selectattr('user_id', '!=', current_user.id)|list %}
+            <a href="{{ url_for('messaging.view_conversation', conversation_id=conv.id) }}" class="list-group-item list-group-item-action">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">
+                        {% if conv.order %}
+                            Order #{{ conv.order.order_number }}
+                        {% else %}
+                            General Conversation
+                        {% endif %}
+                    </h5>
+                    <small>Last message: {{ conv.messages[-1].created_at.strftime('%Y-%m-%d %H:%M') if conv.messages else 'No messages' }}</small>
+                </div>
+                <p class="mb-1">With: 
+                    {% for p in other_participants %}
+                        {{ p.user.full_name or p.user.username }}{% if not loop.last %}, {% endif %}
+                    {% endfor %}
+                </p>
+                {% set unread = conv.messages|selectattr('is_read', 'equalto', false)|selectattr('sender_id', '!=', current_user.id)|list|length %}
+                {% if unread > 0 %}
+                    <span class="badge bg-primary">{{ unread }} new</span>
+                {% endif %}
+            </a>
+        {% endfor %}
+    </div>
+{% else %}
+    <p>No conversations yet.</p>
+{% endif %}
+{% endblock %}

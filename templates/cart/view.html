@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Your Shopping Cart</h1>
+
+{% if cart and cart.items %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Service</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Total</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% set ns = namespace(grand_total=0) %}
+            {% for item in cart.items %}
+            <tr>
+                <td>
+                    <a href="{{ url_for('marketplace.detail', slug=item.service.slug) }}">{{ item.service.title }}</a>
+                </td>
+                <td>${{ item.service.price }}</td>
+                <td>
+                    <form action="{{ url_for('cart.update_quantity', item_id=item.id) }}" method="POST" class="d-flex align-items-center">
+                        <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="form-control" style="width: 80px;">
+                        <button type="submit" class="btn btn-sm btn-secondary ms-2">Update</button>
+                    </form>
+                </td>
+                <td>${{ item.service.price * item.quantity }}</td>
+                <td>
+                    <form action="{{ url_for('cart.remove_item', item_id=item.id) }}" method="POST" style="display:inline;">
+                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Remove this item?')">Remove</button>
+                    </form>
+                </td>
+            </tr>
+            {% set ns.grand_total = ns.grand_total + item.service.price * item.quantity %}
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <th colspan="3" class="text-end">Grand Total:</th>
+                <th>${{ ns.grand_total }}</th>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <form action="{{ url_for('cart.checkout') }}" method="POST">
+        <button type="submit" class="btn btn-success btn-lg">Proceed to Checkout</button>
+    </form>
+{% else %}
+    <p>Your cart is empty. <a href="{{ url_for('marketplace.index') }}">Browse services</a>.</p>
+{% endif %}
+{% endblock %}

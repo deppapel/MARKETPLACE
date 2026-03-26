@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>All Orders</h1>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Order #</th>
+            <th>Buyer</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Payment</th>
+            <th>Date</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for order in orders %}
+        <tr>
+            <td>{{ order.order_number }}</td>
+            <td>{{ order.buyer.full_name or order.buyer.username }}</td>
+            <td>${{ order.total_amount }}</td>
+            <td>
+                <span class="badge bg-{{ 'success' if order.status == 'completed' else 'info' if order.status == 'paid' else 'warning' if order.status == 'pending' else 'secondary' }}">
+                    {{ order.status }}
+                </span>
+            </td>
+            <td>{{ order.payment_method }}</td>
+            <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td>
+                <a href="{{ url_for('orders.order_detail', order_id=order.id) }}" class="btn btn-sm btn-info">View</a>
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="7" class="text-center">No orders found.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

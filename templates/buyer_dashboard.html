@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row">
+    <!-- Sidebar -->
+    <div class="col-md-3 mb-4">
+        <div class="dashboard-sidebar">
+            <div class="text-center mb-4">
+                {% if current_user.avatar_url %}
+                    <img src="{{ current_user.avatar_url }}" alt="Avatar" class="rounded-circle img-fluid" style="width: 100px; height: 100px; object-fit: cover;">
+                {% else %}
+                    <div class="avatar-placeholder mx-auto">
+                        {{ (current_user.full_name or current_user.username)[0] | upper }}
+                    </div>
+                {% endif %}
+                <h5 class="mt-3">{{ current_user.full_name or current_user.username }}</h5>
+                <p class="text-muted">Buyer</p>
+            </div>
+            <hr>
+            <nav class="nav flex-column">
+                <a class="nav-link active" href="#"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                <a class="nav-link" href="{{ url_for('marketplace.index') }}"><i class="fas fa-store"></i> Browse Services</a>
+                <a class="nav-link" href="{{ url_for('orders.buyer_orders') }}"><i class="fas fa-shopping-bag"></i> My Orders</a>
+                <a class="nav-link" href="{{ url_for('cart.view_cart') }}"><i class="fas fa-shopping-cart"></i> Cart</a>
+                <a class="nav-link" href="{{ url_for('messaging.inbox') }}"><i class="fas fa-comments"></i> Messages</a>
+                <a class="nav-link" href="{{ url_for('main.profile') }}"><i class="fas fa-user-edit"></i> Profile Settings</a>
+                <hr>
+                <a class="nav-link text-danger" href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="col-md-9">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2>Welcome back, {{ current_user.full_name or current_user.username }}!</h2>
+                <p>Here's what's happening with your account.</p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-clock me-2"></i>Recent Orders</h5>
+                        {% set recent_orders = current_user.orders[:3] %}
+                        {% if recent_orders %}
+                            <ul class="list-unstyled">
+                                {% for order in recent_orders %}
+                                    <li class="mb-2">
+                                        <a href="{{ url_for('orders.order_detail', order_id=order.id) }}">Order #{{ order.order_number }}</a>
+                                        <span class="badge bg-{{ 'success' if order.status == 'completed' else 'info' if order.status == 'paid' else 'warning' }} float-end">{{ order.status }}</span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="text-muted">No recent orders.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-exclamation-circle me-2"></i>Pending Actions</h5>
+                        {% set pending_reviews = [] %}
+                        {% for order in current_user.orders if order.status == 'completed' %}
+                            {% for item in order.items if not item.review %}
+                                {% set _ = pending_reviews.append(item) %}
+                            {% endfor %}
+                        {% endfor %}
+                        {% if pending_reviews %}
+                            <ul class="list-unstyled">
+                                {% for item in pending_reviews %}
+                                    <li class="mb-2">
+                                        <a href="{{ url_for('reviews.add_review', order_item_id=item.id) }}">Review {{ item.service.title }}</a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="text-muted">No pending actions.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

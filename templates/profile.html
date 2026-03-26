@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <!-- Registration fee payment alert (if not paid) -->
+        {% if not current_user.registration_fee_paid %}
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <strong>Account not fully activated!</strong> Please pay the registration fee of KSh 1 to access all features.
+            <button class="btn btn-sm btn-primary ms-3" id="payRegBtn" data-user-id="{{ current_user.id }}">Pay Now</button>
+        </div>
+        {% endif %}
+
+        <h2>Edit Profile</h2>
+        <form method="POST">
+            {{ form.hidden_tag() }}
+            <div class="mb-3">
+                {{ form.username.label(class="form-label") }}
+                {{ form.username(class="form-control") }}
+                {% for error in form.username.errors %}
+                    <span class="text-danger">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="mb-3">
+                {{ form.email.label(class="form-label") }}
+                {{ form.email(class="form-control") }}
+                {% for error in form.email.errors %}
+                    <span class="text-danger">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="mb-3">
+                {{ form.full_name.label(class="form-label") }}
+                {{ form.full_name(class="form-control") }}
+                {% for error in form.full_name.errors %}
+                    <span class="text-danger">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="mb-3">
+                {{ form.phone_number.label(class="form-label") }}
+                {{ form.phone_number(class="form-control") }}
+                {% for error in form.phone_number.errors %}
+                    <span class="text-danger">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="mb-3">
+                {{ form.bio.label(class="form-label") }}
+                {{ form.bio(class="form-control", rows=3) }}
+                {% for error in form.bio.errors %}
+                    <span class="text-danger">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="mb-3">
+                {{ form.avatar_url.label(class="form-label") }}
+                {{ form.avatar_url(class="form-control") }}
+                <small class="form-text text-muted">Enter a URL to an image (e.g., from Gravatar or a profile picture service).</small>
+                {% for error in form.avatar_url.errors %}
+                    <span class="text-danger">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="mb-3">
+                {{ form.submit(class="btn btn-primary") }}
+                <a href="{{ url_for('main.home') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+
+        <!-- Password change link -->
+        <hr>
+        <a href="{{ url_for('auth.change_password') }}" class="btn btn-warning">Change Password</a>
+    </div>
+</div>
+
+<!-- JavaScript for registration payment -->
+{% if not current_user.registration_fee_paid %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const payBtn = document.getElementById('payRegBtn');
+    if (payBtn) {
+        payBtn.addEventListener('click', function() {
+            const userId = this.dataset.userId;
+            const phone = prompt("Enter your M-Pesa phone number (e.g., 0712345678):");
+            if (!phone) return;
+            fetch('/mpesa/register-payment', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ user_id: userId, phone_number: phone })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('STK push sent! Please check your phone and enter your PIN to complete payment.');
+                    // Optionally refresh after a delay to update the UI
+                    setTimeout(() => location.reload(), 5000);
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Network error: ' + error);
+            });
+        });
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

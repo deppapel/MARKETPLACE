@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <h2>Verify Your Email</h2>
+        <p>A verification code has been sent to <strong>{{ email }}</strong>. Please enter it below.</p>
+        <form method="POST">
+            <div class="mb-3">
+                <label for="otp" class="form-label">Verification Code</label>
+                <input type="text" class="form-control" id="otp" name="otp" required maxlength="6" pattern="\d{6}" inputmode="numeric">
+            </div>
+            <button type="submit" class="btn btn-primary">Verify</button>
+            <a href="{{ url_for('auth.resend_otp', user_id=user_id) }}" class="btn btn-link">Resend Code</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

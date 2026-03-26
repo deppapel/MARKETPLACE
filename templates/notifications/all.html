@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>All Notifications</h1>
+{% if notifications %}
+    <div class="list-group">
+        {% for notif in notifications %}
+            <a href="{{ url_for('notifications.mark_read', notif_id=notif.id) }}" class="list-group-item list-group-item-action {% if not notif.is_read %}list-group-item-primary{% endif %}">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">{{ notif.title }}</h5>
+                    <small>{{ notif.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                </div>
+                <p class="mb-1">{{ notif.content }}</p>
+            </a>
+        {% endfor %}
+    </div>
+    <form action="{{ url_for('notifications.mark_all_read') }}" method="POST" class="mt-3">
+        <button type="submit" class="btn btn-primary">Mark All as Read</button>
+    </form>
+{% else %}
+    <p>No notifications.</p>
+{% endif %}
+{% endblock %}

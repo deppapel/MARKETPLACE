@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Order #{{ order.order_number }}</h1>
+<p>Status: <strong>{{ order.status }}</strong></p>
+<p>Placed on: {{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+
+<h3>Items</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Service</th>
+            <th>Seller</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Review</th>
+            <th>Dispute</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in order.items %}
+        <tr>
+            <td>{{ item.service.title }}</td>
+            <td>{{ item.seller.full_name or item.seller.username }}</td>
+            <td>${{ item.unit_price }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>${{ item.total_price }}</td>
+            <td>
+                <span class="badge bg-{{ 'secondary' if item.status == 'pending' else 'info' if item.status == 'in_progress' else 'success' if item.status == 'completed' else 'danger' }}">
+                    {{ item.status }}
+                </span>
+                {% if current_user.id == item.seller_id and item.status != 'completed' %}
+                    <form action="{{ url_for('orders.update_item_status', item_id=item.id) }}" method="POST" class="mt-1">
+                        <select name="status" class="form-select form-select-sm">
+                            <option value="pending" {% if item.status == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="in_progress" {% if item.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                            <option value="completed" {% if item.status == 'completed' %}selected{% endif %}>Completed</option>
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-primary mt-1">Update</button>
+                    </form>
+                {% endif %}
+            </td>
+            <td>
+                {% if item.review %}
+                    <div>
+                        <strong>Rating:</strong> {{ item.review.rating }}/5<br>
+                        <strong>Comment:</strong> {{ item.review.comment }}
+                    </div>
+                    {% if current_user.id == order.buyer_id %}
+                        <div class="mt-2">
+                            <a href="{{ url_for('reviews.edit_review', review_id=item.review.id) }}" class="btn btn-sm btn-warning">Edit</a>
+                            <form action="{{ url_for('reviews.delete_review', review_id=item.review.id) }}" method="POST" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this review?')">Delete</button>
+                            </form>
+                        </div>
+                    {% endif %}
+                {% elif order.status != 'cancelled' and current_user.id == order.buyer_id %}
+                    {% if order.status == 'completed' %}
+                        <a href="{{ url_for('reviews.add_review', order_item_id=item.id) }}" class="btn btn-sm btn-primary">Leave Review</a>
+                    {% else %}
+                        <span class="text-muted">Available after completion</span>
+                    {% endif %}
+                {% endif %}
+            </td>
+            <td>
+                {% if current_user.id in [order.buyer_id, item.seller_id] %}
+                    {% if not item.disputes %}
+                        <a href="{{ url_for('disputes.raise_dispute', order_item_id=item.id) }}" class="btn btn-sm btn-danger">Raise Dispute</a>
+                    {% else %}
+                        <span class="badge bg-danger">Dispute raised</span>
+                    {% endif %}
+                {% else %}
+                    <span class="text-muted">—</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    <tfoot>
+        <tr>
+            <th colspan="7" class="text-end">Total:</th>
+            <th>${{ order.total_amount }}</th>
+        </tr>
+    </tfoot>
+</table>
+
+<!-- M-Pesa Payment Section (visible only when order is pending) -->
+{% if order.status == 'pending' %}
+    <div class="alert alert-info">
+        <strong>Payment required:</strong> This order is pending payment. Complete the payment to proceed.
+        <button class="btn btn-primary ms-3" id="payNowBtn" data-order-id="{{ order.id }}">Pay Now with M-Pesa</button>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const payBtn = document.getElementById('payNowBtn');
+        if (payBtn) {
+            payBtn.addEventListener('click', function() {
+                const orderId = this.dataset.orderId;
+                const phone = prompt("Enter your M-Pesa phone number (e.g., 0712345678):");
+                if (!phone) return;
+                fetch('/mpesa/order-payment/' + orderId, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ phone_number: phone })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('STK push sent! Please check your phone and enter your PIN to complete payment.');
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('Network error: ' + error);
+                });
+            });
+        }
+    });
+    </script>
+{% endif %}
+
+<!-- Message Buyer button for sellers -->
+{% if current_user.id != order.buyer_id and current_user.id in order.items|map(attribute='seller_id')|list %}
+    <a href="{{ url_for('messaging.start_conversation', order_id=order.id) }}" class="btn btn-info mb-3">Message Buyer</a>
+{% endif %}
+
+{% if current_user.id == order.buyer_id and order.status == 'paid' %}
+    <form action="{{ url_for('orders.cancel_order', order_id=order.id) }}" method="POST">
+        <button type="submit" class="btn btn-danger" onclick="return confirm('Cancel this order?')">Cancel Order</button>
+    </form>
+{% endif %}
+{% endblock %}

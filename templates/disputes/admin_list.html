@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>All Disputes</h1>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Order</th>
+            <th>Service</th>
+            <th>Raised By</th>
+            <th>Reason</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for dispute in disputes %}
+        <tr>
+            <td>{{ dispute.id }}</td>
+            <td>{{ dispute.order_item.order.order_number }}</td>
+            <td>{{ dispute.order_item.service.title }}</td>
+            <td>{{ dispute.raised_by.full_name or dispute.raised_by.username }}</td>
+            <td>{{ dispute.reason }}</td>
+            <td>
+                <span class="badge bg-{{ 'warning' if dispute.status == 'open' else 'info' if dispute.status == 'under_review' else 'success' if dispute.status == 'resolved' else 'danger' }}">
+                    {{ dispute.status }}
+                </span>
+            </td>
+            <td>{{ dispute.created_at.strftime('%Y-%m-%d') }}</td>
+            <td>
+                <a href="{{ url_for('disputes.view_dispute', dispute_id=dispute.id) }}" class="btn btn-sm btn-info">View</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

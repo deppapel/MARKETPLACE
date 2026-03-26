@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Raise a Dispute</h1>
+<p>Order Item: {{ order_item.service.title }}</p>
+<form method="POST">
+    <div class="mb-3">
+        <label for="reason" class="form-label">Reason</label>
+        <select name="reason" class="form-select" required>
+            <option value="">Select a reason</option>
+            {% for value, label in reason_choices %}
+                <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="mb-3">
+        <label for="description" class="form-label">Description</label>
+        <textarea name="description" class="form-control" rows="5" required></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Submit Dispute</button>
+    <a href="{{ url_for('orders.order_detail', order_id=order_item.order.id) }}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}
