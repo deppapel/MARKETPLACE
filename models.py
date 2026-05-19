@@ -14,6 +14,8 @@ class User(db.Model, UserMixin):
     full_name = db.Column(db.String(120))
     phone_number = db.Column(db.String(20))
     avatar_url = db.Column(db.String(200))
+    avatar_data = db.Column(db.LargeBinary)  # Store avatar as binary data
+    avatar_mime = db.Column(db.String(50))  # Store MIME type of the avatar
     bio = db.Column(db.Text)
     role = db.Column(db.String(50), default='buyer')  # 'buyer', 'seller', 'admin', or 'buyer,seller'
     email_verified = db.Column(db.Boolean, default=False)
@@ -131,6 +133,7 @@ class Transaction(db.Model):
     transaction_type = db.Column(db.String(20))  # 'registration' or 'order'
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     completed_at = db.Column(db.DateTime)
+    checkout_request_id = db.Column(db.String(100), unique=True)
 
     user = db.relationship('User', backref='transactions')
     order = db.relationship('Order', backref='transactions')
@@ -274,4 +277,14 @@ class DisputeMessage(db.Model):
     sender = db.relationship('User', foreign_keys=[sender_id])    
     recipient = db.relationship('User', foreign_keys=[recipient_id])
 
-   
+class TransactionQuery(db.Model):
+    __tablename__ = 'transaction_query'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    transaction_id = db.Column(db.String(100), nullable=False) #mpesa receipt n.o
+    originator_conversation_id = db.Column(db.String(100), unique=True, nullable=False) #the one the api returns
+    status = db.Column(db.String(20), default='pending')# i.e pending, complete, failed
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    completed_at = db.Column(db.DateTime)
+
+    user = db.relationship('User', backref='transaction_queries')

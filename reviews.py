@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
+from utils import payment_required
 from models import db, Review, OrderItem, Notification  # added Notification
 from forms import ReviewForm
 from functools import wraps
@@ -29,6 +30,7 @@ def buyer_required(f):
 
 @reviews.route('/add/<int:order_item_id>', methods=['GET', 'POST'])
 @buyer_required
+@payment_required
 def add_review(order_item_id):
     order_item = OrderItem.query.get_or_404(order_item_id)
     # Check if this order item belongs to the current user
@@ -72,6 +74,7 @@ def add_review(order_item_id):
 
 @reviews.route('/edit/<int:review_id>', methods=['GET', 'POST'])
 @login_required
+@payment_required
 def edit_review(review_id):
     review = Review.query.get_or_404(review_id)
     # Only the buyer who wrote the review can edit
@@ -90,6 +93,7 @@ def edit_review(review_id):
 
 @reviews.route('/delete/<int:review_id>', methods=['POST'])
 @login_required
+@payment_required
 def delete_review(review_id):
     review = Review.query.get_or_404(review_id)
     if review.buyer_id != current_user.id:

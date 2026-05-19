@@ -67,7 +67,7 @@ class MpesaService:
             "PartyA": phone_number,
             "PartyB": self.shortcode,
             "PhoneNumber": phone_number,
-            "CallBackURL": "https://yourdomain.com/mpesa/callback",  # you'll replace with a real URL later
+            "CallBackURL": "https://bebe-bland-knowledgeably.ngrok-free.dev/mpesa/callback",  # you'll replace with a real URL later
             "AccountReference": account_ref,
             "TransactionDesc": "Marketplace Payment"
         }
@@ -81,4 +81,33 @@ class MpesaService:
             return response.json()
         except Exception as e:
             print(f"STK push error: {e}")
+            return {'error': str(e)}
+
+    def query_transaction_status(self, transaction_id):
+        """Query the status of a transaction using its ID"""
+        token = self.get_access_token()
+        if not token:
+            return {'error': 'Could not get access token'} 
+        url = f"{self.base_url}/mpesa/transactionstatus/v1/query"
+        payload = {
+            "Initiator": current_app.config['MPESA_INITIATOR'],
+            "SecurityCredential": current_app.config['MPESA_SECURITY_CREDENTIAL'],
+            "CommandID": "TransactionStatusQuery",
+            "TransactionID": transaction_id,
+            "PartyA": self.shortcode,
+            "IdentifierType": current_app.config['MPESA_IDENTIFIER_TYPE'],
+            "ResultURL": current_app.config['MPESA_RESULT_URL'],
+            "QueueTimeOutURL": current_app.config['MPESA_QUEUE_TIMEOUT_URL'],
+            "Remarks": "Querying transaction status",
+            "Occasion": "Admin verification"
+        }  
+        headers = {'Authorization': f'Bearer {token}'}
+        try:
+            response = requests.post(url, json=payload, headers=headers)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            print(f"Transaction status error: {e}")
+            if hasattr(e, 'response') and e.response is not None:
+                print("Response content:", e.response.text)  # More debugging info
             return {'error': str(e)}

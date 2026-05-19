@@ -5,8 +5,8 @@
     <div class="col-md-3 mb-4">
         <div class="dashboard-sidebar">
             <div class="text-center mb-4">
-                {% if current_user.avatar_url %}
-                    <img src="{{ current_user.avatar_url }}" alt="Avatar" class="rounded-circle img-fluid" style="width: 100px; height: 100px; object-fit: cover;">
+                {% if current_user.avatar_data %}
+                    <img src="{{ url_for('main.avatar', user_id=current_user.id) }}" alt="Avatar" class="rounded-circle img-fluid" style="width: 100px; height: 100px; object-fit: cover;">
                 {% else %}
                     <div class="avatar-placeholder mx-auto">
                         {{ (current_user.full_name or current_user.username)[0] | upper }}

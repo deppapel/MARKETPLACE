@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_required, current_user
+from utils import payment_required
 from models import db, Order, OrderItem, Service, User, Notification  # added Notification
 from functools import wraps
 import random
@@ -51,6 +52,7 @@ def update_order_status(order):
 
 @orders.route('/create/<int:service_id>', methods=['POST'])
 @buyer_required
+@payment_required
 def create_order(service_id):
     """Legacy single-service order (kept for compatibility)."""
     service = Service.query.get_or_404(service_id)
@@ -88,6 +90,9 @@ def create_order(service_id):
 @login_required
 def order_detail(order_id):
     order = Order.query.get_or_404(order_id)
+    if current_user.is_admin:
+        return render_template('orders/detail.html', order=order)
+
     if order.buyer_id != current_user.id and not any(item.seller_id == current_user.id for item in order.items):
         flash('You do not have permission to view this order.', 'danger')
         return redirect(url_for('main.home'))
@@ -95,12 +100,14 @@ def order_detail(order_id):
 
 @orders.route('/buyer/orders')
 @buyer_required
+@payment_required
 def buyer_orders():
     orders = Order.query.filter_by(buyer_id=current_user.id).order_by(Order.created_at.desc()).all()
     return render_template('orders/buyer_orders.html', orders=orders)
 
 @orders.route('/seller/orders')
 @seller_required
+@payment_required
 def seller_orders():
     items = OrderItem.query.filter_by(seller_id=current_user.id).all()
     order_ids = set(item.order_id for item in items)
@@ -138,6 +145,7 @@ def update_item_status(item_id):
 
 @orders.route('/cancel/<int:order_id>', methods=['POST'])
 @login_required
+@payment_required 
 def cancel_order(order_id):
     order = Order.query.get_or_404(order_id)
     if order.buyer_id != current_user.id:

@@ -3,8 +3,10 @@ from flask_login import login_required, current_user
 from models import db, Cart, CartItem, Service, Order, OrderItem
 from functools import wraps
 from datetime import datetime
+from utils import payment_required
 import random
 import string
+
 
 cart = Blueprint('cart', __name__, url_prefix='/cart')
 
@@ -43,6 +45,7 @@ def view_cart():
 
 @cart.route('/add/<int:service_id>', methods=['POST'])
 @buyer_required
+@payment_required
 def add_to_cart(service_id):
     service = Service.query.get_or_404(service_id)
     if service.status != 'published':
@@ -91,6 +94,7 @@ def update_quantity(item_id):
 
 @cart.route('/checkout', methods=['POST'])
 @buyer_required
+@payment_required
 def checkout():
     cart = Cart.query.filter_by(user_id=current_user.id).first()
     if not cart or not cart.items:

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Manual Account Activation</h2>
+
+<form method="POST" class="mb-4">
+    <div class="input-group">
+        <input type="text" name="username" class="form-control" placeholder="Enter username" required>
+        <button type="submit" name="search" class="btn btn-primary">Search User</button>
+    </div>
+</form>
+
+{% if user %}
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">{{ user.username }}</h5>
+        <p><strong>Email:</strong> {{ user.email }}</p>
+        <p><strong>Full name:</strong> {{ user.full_name or 'Not provided' }}</p>
+        <p><strong>Status:</strong> 
+            {% if user.registration_fee_paid %}
+                <span class="badge bg-success">Activated</span>
+            {% else %}
+                <span class="badge bg-warning">Not Activated</span>
+            {% endif %}
+        </p>
+        
+        {% if not user.registration_fee_paid %}
+        <form method="POST">
+            <input type="hidden" name="user_id" value="{{ user.id }}">
+            <div class="mb-3">
+                <label for="transaction_id" class="form-label">M-Pesa Transaction Receipt Number</label>
+                <input type="text" name="transaction_id" class="form-control" required placeholder="e.g. UCQJ3AG934">
+            </div>
+            <button type="submit" name="activate" class="btn btn-success">Verify & Activate</button>
+        </form>
+        {% else %}
+        <p>User is already activated.</p>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

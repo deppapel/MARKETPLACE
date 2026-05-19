@@ -3,7 +3,7 @@
 <div class="row">
     <div class="col-md-8 offset-md-2">
         <!-- Registration fee payment alert (if not paid) -->
-        {% if not current_user.registration_fee_paid %}
+        {% if not current_user.registration_fee_paid and not current_user.is_admin %}
         <div class="alert alert-warning alert-dismissible fade show" role="alert">
             <strong>Account not fully activated!</strong> Please pay the registration fee of KSh 1 to access all features.
             <button class="btn btn-sm btn-primary ms-3" id="payRegBtn" data-user-id="{{ current_user.id }}">Pay Now</button>
@@ -11,7 +11,7 @@
         {% endif %}
 
         <h2>Edit Profile</h2>
-        <form method="POST">
+        <form method="POST" enctype="multipart/form-data">
             {{ form.hidden_tag() }}
             <div class="mb-3">
                 {{ form.username.label(class="form-label") }}
@@ -48,11 +48,21 @@
                     <span class="text-danger">{{ error }}</span>
                 {% endfor %}
             </div>
+                        <!-- Avatar display -->
             <div class="mb-3">
-                {{ form.avatar_url.label(class="form-label") }}
-                {{ form.avatar_url(class="form-control") }}
-                <small class="form-text text-muted">Enter a URL to an image (e.g., from Gravatar or a profile picture service).</small>
-                {% for error in form.avatar_url.errors %}
+                <label class="form-label">Current Avatar</label><br>
+                {% if current_user.avatar_data %}
+                    <img src="{{ url_for('main.avatar', user_id=current_user.id) }}" alt="Avatar" style="max-width: 150px; max-height: 150px;" class="rounded-circle">
+                {% else %}
+                    <img src="{{ url_for('static', filename='default_avatar.png') }}" alt="Default Avatar" style="max-width: 150px;" class="rounded-circle">
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                {{ form.avatar.label(class="form-label") }}
+                {{ form.avatar(class="form-control") }}
+                <small class="form-text text-muted">Upload a new profile picture (JPG, PNG, GIF).</small>
+                {% for error in form.avatar.errors %}
                     <span class="text-danger">{{ error }}</span>
                 {% endfor %}
             </div>

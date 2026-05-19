@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, Response
 from flask_login import login_required, current_user
 from forms import ProfileForm
 from models import db, User, Order
@@ -16,7 +16,7 @@ def home():
     elif 'admin' in current_user.role.split(','):
         return redirect(url_for('main.admin_dashboard'))
     else:
-        # Fallback (should not happen)
+        # Fallback (this doesn't even exist, i dont know where you are going with this)
         return redirect(url_for('main.some_other_page'))
 
 @main.route('/profile', methods=['GET', 'POST'])
@@ -30,7 +30,12 @@ def profile():
         current_user.full_name = form.full_name.data
         current_user.phone_number = form.phone_number.data
         current_user.bio = form.bio.data
-        current_user.avatar_url = form.avatar_url.data
+        # Handle avatar upload
+        if form.avatar.data:
+            file = form.avatar.data
+            current_user.avatar_data = file.read()  # Store the binary data
+            current_user.avatar_mime = file.mimetype  # Store the MIME type
+            current_user.avatar_url = None  # Clear URL if new file is uploaded
         db.session.commit()
         flash('Your profile has been updated.', 'success')
         return redirect(url_for('main.profile'))
@@ -41,8 +46,17 @@ def profile():
         form.full_name.data = current_user.full_name
         form.phone_number.data = current_user.phone_number
         form.bio.data = current_user.bio
-        form.avatar_url.data = current_user.avatar_url
+        
     return render_template('profile.html', form=form)
+
+@main.route('/avatar/<int:user_id>')
+def avatar(user_id):
+    user = User.query.get_or_404(user_id)
+    if user.avatar_data and user.avatar_mime:
+        return Response(user.avatar_data, mimetype=user.avatar_mime)
+    else:
+        # Return a default avatar image (optional)
+        return redirect(url_for('static', filename='default_avatar.png'))
 
 @main.route('/seller/dashboard')
 @login_required

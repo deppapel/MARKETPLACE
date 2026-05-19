@@ -2,6 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, TextAreaField, SubmitField, RadioField, SelectField,DecimalField, IntegerField, FileField
 from wtforms.widgets import ListWidget, CheckboxInput
 from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError, Optional, NumberRange
+from flask_wtf.file import FileField, FileAllowed, FileRequired
 import re
 
 def phone_number_check(form, field):
@@ -34,7 +35,7 @@ class ProfileForm(FlaskForm):
     full_name = StringField('Full Name', validators=[DataRequired(), Length(max=120)])
     phone_number = StringField('Phone Number', validators=[DataRequired(), phone_number_check])
     bio = TextAreaField('Bio', validators=[Optional(), Length(max=500)])
-    avatar_url = StringField('Avatar URL', validators=[Optional(), Length(max=200)])
+    avatar = FileField('Profile Picture', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Images only!')])
     submit = SubmitField('Update Profile')
 
 

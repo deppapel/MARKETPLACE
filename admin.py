@@ -1,10 +1,11 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, current_app, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from models import db, Category
 from forms import CategoryForm
 from slugify import slugify
 from functools import wraps
-from models import db, Category, User, Order  
+from models import db, Category, User, Order, TransactionQuery
+from mpesa_service import MpesaService  
 
 admin = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -142,3 +143,50 @@ def orders():
     """View all orders in the system."""
     orders = Order.query.order_by(Order.created_at.desc()).all()
     return render_template('admin/orders.html', orders=orders)
+
+@admin.route('/manual-activation', methods=['GET', 'POST'])
+@admin_required
+def manual_activation():
+    user = None
+    if request.method == 'POST':
+        if 'search' in request.form:
+            username = request.form.get('username')
+            user = User.query.filter(User.username.ilike(f'%{username}%')).first()
+            if not user:
+                flash('User not found.', 'danger')
+        elif 'activate' in request.form:
+            user_id = request.form.get('user_id')
+            transaction_id = request.form.get('transaction_id')
+            user = User.query.get(user_id)
+            if not user:
+                flash('User not found.', 'danger')
+                return redirect(url_for('admin.manual_activation'))
+            if user.registration_fee_paid:
+                flash('User already activated.', 'warning')
+                return redirect(url_for('admin.manual_activation'))
+
+            # Call M-Pesa API
+            mpesa = MpesaService()
+            mpesa.init_app(current_app)
+            result = mpesa.query_transaction_status(transaction_id)  # Pass user info for better logging
+
+            if 'error' in result:
+                flash(f'Error: {result["error"]}', 'danger')
+            else:
+                # Save the query request
+                originator_conv_id = result.get('OriginatorConversationID')
+                if originator_conv_id:
+                    query = TransactionQuery(
+                        user_id=user.id,
+                        transaction_id=transaction_id,
+                        originator_conversation_id=originator_conv_id,
+                        status='pending'
+                    )
+                    db.session.add(query)
+                    db.session.commit()
+                    flash('Verification request sent. User will be activated once confirmed by M-Pesa.', 'info')
+                else:
+                    flash('Unexpected response from M-Pesa. No OriginatorConversationID.', 'danger')
+            return redirect(url_for('admin.manual_activation'))
+
+    return render_template('admin/manual_activation.html', user=user)            

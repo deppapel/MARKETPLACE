@@ -10,8 +10,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+        <div class="container" style="margin-bottom: -15px; margin-top: -15px;">
             <a class="navbar-brand" href="{{ url_for('index') }}"><i class="fas fa-store me-2"></i>Marketplace</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -68,6 +68,11 @@
                                 <i class="fas fa-comments"></i>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <button id="theme-toggle" class="btn btn-link nav-link" style="border: none; background: none;">
+                                <i class="fas fa-moon"></i>  <!-- default light mode icon (moon means dark mode) -->
+                            </button>
+                        </li>
 
                         <!-- Logout (text link, no icon/tooltip) -->
                         <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a></li>
@@ -80,7 +85,7 @@
         </div>
     </nav>
 
-    <div class="container mt-4">
+    <div class="container mt-5">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -106,5 +111,33 @@
             return new bootstrap.Tooltip(tooltipTriggerEl)
         })
     </script>
+    <script>
+    // Function to set theme
+    function setTheme(theme) {
+        if (theme === 'dark') {
+            document.body.classList.add('dark-mode');
+            localStorage.setItem('theme', 'dark');
+            document.getElementById('theme-toggle').innerHTML = '<i class="fas fa-sun"></i>';
+        } else {
+            document.body.classList.remove('dark-mode');
+            localStorage.setItem('theme', 'light');
+            document.getElementById('theme-toggle').innerHTML = '<i class="fas fa-moon"></i>';
+        }
+    }
+
+    // Load saved theme
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        setTheme('dark');
+    } else {
+        setTheme('light');
+    }
+
+    // Toggle on button click
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+        const isDark = document.body.classList.contains('dark-mode');
+        setTheme(isDark ? 'light' : 'dark');
+    });
+</script>
 </body>
 </html>

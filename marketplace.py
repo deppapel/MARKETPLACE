@@ -10,11 +10,17 @@ def index():
     query = Service.query.filter_by(status='published')
 
     # Search by keyword (title or description)
-    q = request.args.get('q', '')
-    if q:
-        query = query.filter(
-            or_(Service.title.ilike(f'%{q}%'), Service.description.ilike(f'%{q}%'))
-        )
+    q = request.args.get('q', '').strip()[:50]  # limit length for searching
+
+    if len(q) >= 2 and q not in ['%', '_']:
+        safe_q = q.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')  # Escape special characters
+        words = safe_q.split()
+
+        for word in words:
+            term = f'%{word}%'
+            query = query.filter(
+                or_(Service.title.ilike(term), Service.description.ilike(term))
+            )
 
     # Filter by category
     category_id = request.args.get('category', type=int)

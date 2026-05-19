@@ -55,8 +55,8 @@
             <div class="card-body">
                 <h5 class="card-title">Seller Info</h5>
                 <p><strong>{{ service.seller.full_name or service.seller.username }}</strong></p>
-                {% if service.seller.avatar_url %}
-                    <img src="{{ service.seller.avatar_url }}" alt="Avatar" class="img-fluid rounded-circle mb-3" style="max-width: 100px;">
+                {% if service.seller.avatar_data %}
+                    <img src="{{ url_for('main.avatar', user_id=service.seller.id) }}" alt="Avatar" class="img-fluid rounded-circle mb-3" style="max-width: 100px;">
                 {% endif %}
                 <p>{{ service.seller.bio or 'No bio provided.' }}</p>
                 <form action="{{ url_for('messaging.start_conversation_with_seller', seller_id=service.seller_id) }}" method="POST">

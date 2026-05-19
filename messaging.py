@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
+from utils import payment_required
 from models import db, Conversation, ConversationParticipant, Message, Notification, Order
 from datetime import datetime
 from functools import wraps
@@ -20,6 +21,7 @@ def participant_required(f):
 
 @messaging.route('/')
 @login_required
+@payment_required
 def inbox():
     """List all conversations for the current user."""
     participants = ConversationParticipant.query.filter_by(user_id=current_user.id).order_by(ConversationParticipant.last_read_at.desc()).all()
@@ -46,6 +48,7 @@ def view_conversation(conversation_id):
 @messaging.route('/<int:conversation_id>/send', methods=['POST'])
 @login_required
 @participant_required
+@payment_required
 def send_message(conversation_id):
     content = request.form.get('content')
     if not content:
@@ -80,6 +83,7 @@ def send_message(conversation_id):
 
 @messaging.route('/start/<int:order_id>', methods=['GET', 'POST'])
 @login_required
+@payment_required
 def start_conversation(order_id):
     order = Order.query.get_or_404(order_id)
     # Allowed participants: buyer and all sellers

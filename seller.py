@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_required, current_user
+from utils import payment_required
 from models import db, Service, ServiceImage, Category
 from forms import ServiceForm
 from werkzeug.utils import secure_filename
@@ -24,6 +25,7 @@ def allowed_file(filename):
 
 @seller.route('/services')
 @seller_required
+@payment_required
 def services():
     """List all services for the logged-in seller."""
     services = Service.query.filter_by(seller_id=current_user.id).order_by(Service.created_at.desc()).all()
@@ -31,6 +33,7 @@ def services():
 
 @seller.route('/services/add', methods=['GET', 'POST'])
 @seller_required
+@payment_required
 def add_service():
     form = ServiceForm()
     # Populate category choices (only active categories)
@@ -78,6 +81,7 @@ def add_service():
 
 @seller.route('/services/edit/<int:id>', methods=['GET', 'POST'])
 @seller_required
+@payment_required
 def edit_service(id):
     service = Service.query.get_or_404(id)
     # Ensure the service belongs to the current seller
@@ -126,6 +130,7 @@ def edit_service(id):
 
 @seller.route('/services/delete/<int:id>', methods=['POST'])
 @seller_required
+@payment_required
 def delete_service(id):
     service = Service.query.get_or_404(id)
     if service.seller_id != current_user.id:

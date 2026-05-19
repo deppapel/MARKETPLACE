@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
+from utils import payment_required
 from models import db, Dispute, DisputeMessage, OrderItem, Notification, User
 from functools import wraps
 from datetime import datetime
@@ -31,6 +32,7 @@ def dispute_participant_required(f):
 
 @disputes.route('/raise/<int:order_item_id>', methods=['GET', 'POST'])
 @login_required
+@payment_required
 def raise_dispute(order_item_id):
     order_item = OrderItem.query.get_or_404(order_item_id)
     # Check if user is either buyer or seller of this item
@@ -108,6 +110,7 @@ def raise_dispute(order_item_id):
 
 @disputes.route('/<int:dispute_id>')
 @login_required
+@payment_required
 @dispute_participant_required
 def view_dispute(dispute_id):
     dispute = Dispute.query.get_or_404(dispute_id)
