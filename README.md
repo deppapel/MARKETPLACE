@@ -80,3 +80,101 @@ flowchart TD
     style Active fill:#9f9,stroke:#333
     style OrderCompleted fill:#9f9,stroke:#333
 ```
+
+## Entity Relationship Diagram
+
+```mermaid
+erDiagram
+    User {
+        int id PK
+        string username
+        string email
+        string role
+        boolean registration_fee_paid
+        boolean email_verified
+        bytea avatar_data
+    }
+    Category {
+        int id PK
+        string name
+        int parent_id FK
+    }
+    Service {
+        int id PK
+        int seller_id FK
+        int category_id FK
+        string title
+        numeric price
+        string status
+    }
+    ServiceImage {
+        int id PK
+        int service_id FK
+        string image_url
+    }
+    Order {
+        int id PK
+        int buyer_id FK
+        string order_number
+        string status
+        numeric total_amount
+    }
+    OrderItem {
+        int id PK
+        int order_id FK
+        int service_id FK
+        int seller_id FK
+        string status
+    }
+    Review {
+        int id PK
+        int order_item_id FK
+        int rating
+        text comment
+    }
+    Dispute {
+        int id PK
+        int order_item_id FK
+        int raised_by_id FK
+        int against_id FK
+        string status
+    }
+    Transaction {
+        int id PK
+        int user_id FK
+        int order_id FK
+        numeric amount
+        string mpesa_receipt
+        string status
+    }
+    Conversation {
+        int id PK
+        int order_id FK
+    }
+    Message {
+        int id PK
+        int conversation_id FK
+        int sender_id FK
+        text content
+    }
+    Notification {
+        int id PK
+        int user_id FK
+        string type
+        text content
+        boolean is_read
+    }
+
+    User ||--o{ Service : "sells"
+    User ||--o{ Order : "buys"
+    User ||--o{ Transaction : "has"
+    User ||--o{ Notification : "receives"
+    Service ||--o{ ServiceImage : "has"
+    Service ||--o{ OrderItem : "appears in"
+    Category ||--o{ Service : "contains"
+    Order ||--o{ OrderItem : "contains"
+    OrderItem ||--|| Review : "has one"
+    OrderItem ||--o{ Dispute : "may have"
+    Order ||--o{ Conversation : "linked to"
+    Conversation ||--o{ Message : "contains"
+```
